@@ -21,7 +21,7 @@ from ._errors import (
     _raise_for_status,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 DEFAULT_BASE_URL = "https://api.memorykit.io/v1"
 DEFAULT_TIMEOUT = 30.0

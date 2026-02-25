@@ -376,7 +376,8 @@ class Memories:
             "include_graph": include_graph if include_graph is not None else includeGraph,
             "filters": filters,
         }
-        response = self._client.request_stream("POST", "/memories/stream", json=body)
+        body["stream"] = True
+        response = self._client.request_stream("POST", "/memories/query", json=body)
         return SSEIterator(response)
 
 
@@ -615,5 +616,6 @@ class AsyncMemories:
             "include_graph": include_graph if include_graph is not None else includeGraph,
             "filters": filters,
         }
-        response = await self._client.request_stream("POST", "/memories/stream", json=body)
+        body["stream"] = True
+        response = await self._client.request_stream("POST", "/memories/query", json=body)
         return AsyncSSEIterator(response)

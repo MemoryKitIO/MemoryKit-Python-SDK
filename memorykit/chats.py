@@ -81,7 +81,7 @@ class Chats:
         Returns:
             A :class:`ChatHistory` with ``id``, ``title``, and ``messages``.
         """
-        data = self._client.request("GET", f"/chats/{chat_id}")
+        data = self._client.request("GET", f"/chats/{chat_id}/messages")
         return ChatHistory(data)
 
     def send_message(
@@ -244,7 +244,7 @@ class AsyncChats:
 
     async def get_history(self, chat_id: str) -> ChatHistory:
         """Get chat history. See :meth:`Chats.get_history`."""
-        data = await self._client.request("GET", f"/chats/{chat_id}")
+        data = await self._client.request("GET", f"/chats/{chat_id}/messages")
         return ChatHistory(data)
 
     async def send_message(

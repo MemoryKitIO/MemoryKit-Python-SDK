@@ -260,7 +260,7 @@ class Memories:
             query: The natural language query (required).
             max_sources: Maximum number of source documents (default 10).
             temperature: LLM temperature (default 0.7).
-            mode: Query mode — ``"auto"``, ``"retrieval"``, or ``"generation"``.
+            mode: Query mode — ``"fast"``, ``"balanced"``, or ``"precise"``.
             user_id: Scope query to a specific user.
             instructions: Additional instructions for the LLM.
             response_format: Desired response format.

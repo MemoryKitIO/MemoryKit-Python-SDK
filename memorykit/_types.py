@@ -6,8 +6,8 @@ while still allowing dict-style access for forward-compatibility.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterator, List, Optional
-
+from collections.abc import Iterator
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Base
@@ -21,9 +21,9 @@ class APIObject:
     The underlying data is stored in ``_data`` and is always a plain dict.
     """
 
-    _data: Dict[str, Any]
+    _data: dict[str, Any]
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def __init__(self, data: dict[str, Any] | None = None, **kwargs: Any) -> None:
         object.__setattr__(self, "_data", {})
         if data:
             self._data.update(data)
@@ -88,7 +88,7 @@ class APIObject:
             return self._data == other
         return NotImplemented
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return the underlying data as a plain ``dict``."""
         return dict(self._data)
 
@@ -102,26 +102,26 @@ class Memory(APIObject):
 
     id: str
     status: str
-    title: Optional[str]
-    type: Optional[str]
-    tags: List[str]
-    content: Optional[str]
-    metadata: Optional[Dict[str, Any]]
-    user_id: Optional[str]
-    language: Optional[str]
-    format: Optional[str]
-    created_at: Optional[str]
-    updated_at: Optional[str]
+    title: str | None
+    type: str | None
+    tags: list[str]
+    content: str | None
+    metadata: dict[str, Any] | None
+    user_id: str | None
+    language: str | None
+    format: str | None
+    chunks_count: int | None
+    created_at: str | None
+    updated_at: str | None
 
 
 class MemoryList(APIObject):
     """Paginated list of memories."""
 
-    data: List[Memory]
+    data: list[Memory]
     has_more: bool
-    cursor: Optional[str]
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def __init__(self, data: dict[str, Any] | None = None, **kwargs: Any) -> None:
         super().__init__(data, **kwargs)
         # Wrap items in Memory objects
         raw_items = self._data.get("data", [])
@@ -139,49 +139,51 @@ class MemoryList(APIObject):
 class BatchIngestResponse(APIObject):
     """Response from batch memory ingestion."""
 
-    accepted: int
-    rejected: int
-    items: List[APIObject]
+    items: list[APIObject]
+    total: int
+    failed: int
+    errors: list[dict[str, Any]] | None
 
 
 class QueryResponse(APIObject):
     """Response from a RAG query."""
 
     answer: str
-    confidence: Optional[float]
-    sources: List[APIObject]
-    model: Optional[str]
-    request_id: Optional[str]
-    usage: Optional[Dict[str, Any]]
+    confidence: float | None
+    sources: list[APIObject]
+    model: str | None
+    request_id: str | None
+    usage: dict[str, Any] | None
 
 
 class SearchResponse(APIObject):
     """Response from a hybrid search."""
 
-    results: List[APIObject]
-    graph: Optional[Any]
-    request_id: Optional[str]
-    total_results: Optional[int]
+    results: list[APIObject]
+    graph: Any | None
+    request_id: str | None
+    processing_time_ms: int | None
+    total_results: int | None
 
 
 class Chat(APIObject):
     """A chat session."""
 
     id: str
-    title: Optional[str]
-    user_id: Optional[str]
-    metadata: Optional[Dict[str, Any]]
-    created_at: Optional[str]
-    updated_at: Optional[str]
+    title: str | None
+    user_id: str | None
+    message_count: int
+    created_at: str | None
+    updated_at: str | None
 
 
 class ChatList(APIObject):
     """Paginated list of chats."""
 
-    data: List[Chat]
+    data: list[Chat]
     has_more: bool
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def __init__(self, data: dict[str, Any] | None = None, **kwargs: Any) -> None:
         super().__init__(data, **kwargs)
         raw_items = self._data.get("data", [])
         self._data["data"] = [
@@ -195,22 +197,34 @@ class ChatList(APIObject):
         return len(self._data["data"])
 
 
-class ChatHistory(APIObject):
-    """Chat with its message history."""
-
-    id: str
-    title: Optional[str]
-    messages: List[APIObject]
-
-
 class ChatMessage(APIObject):
     """A single chat message response."""
 
-    id: Optional[str]
+    id: str | None
     role: str
     content: str
-    sources: Optional[List[APIObject]]
-    created_at: Optional[str]
+    sources: list[APIObject] | None
+    created_at: str | None
+
+
+class ChatMessageList(APIObject):
+    """Paginated list of chat messages."""
+
+    data: list[ChatMessage]
+    has_more: bool
+
+    def __init__(self, data: dict[str, Any] | None = None, **kwargs: Any) -> None:
+        super().__init__(data, **kwargs)
+        raw_items = self._data.get("data", [])
+        self._data["data"] = [
+            ChatMessage(item) if isinstance(item, dict) else item for item in raw_items
+        ]
+
+    def __iter__(self) -> Iterator[ChatMessage]:  # type: ignore[override]
+        return iter(self._data["data"])
+
+    def __len__(self) -> int:
+        return len(self._data["data"])
 
 
 class ChatMessageResponse(APIObject):
@@ -218,7 +232,7 @@ class ChatMessageResponse(APIObject):
 
     message: ChatMessage
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def __init__(self, data: dict[str, Any] | None = None, **kwargs: Any) -> None:
         super().__init__(data, **kwargs)
         msg = self._data.get("message")
         if isinstance(msg, dict):
@@ -229,11 +243,11 @@ class User(APIObject):
     """A user record."""
 
     id: str
-    email: Optional[str]
-    name: Optional[str]
-    metadata: Optional[Dict[str, Any]]
-    created_at: Optional[str]
-    updated_at: Optional[str]
+    email: str | None
+    name: str | None
+    metadata: dict[str, Any] | None
+    created_at: str | None
+    updated_at: str | None
 
 
 class Event(APIObject):
@@ -241,17 +255,18 @@ class Event(APIObject):
 
     id: str
     type: str
-    data: Optional[Dict[str, Any]]
-    user_id: Optional[str]
-    created_at: Optional[str]
+    data: dict[str, Any] | None
+    user_id: str | None
+    created_at: str | None
 
 
 class EventList(APIObject):
-    """List of user events."""
+    """Paginated list of user events."""
 
-    data: List[Event]
+    data: list[Event]
+    has_more: bool
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def __init__(self, data: dict[str, Any] | None = None, **kwargs: Any) -> None:
         super().__init__(data, **kwargs)
         raw_items = self._data.get("data", [])
         self._data["data"] = [
@@ -261,23 +276,28 @@ class EventList(APIObject):
     def __iter__(self) -> Iterator[Event]:  # type: ignore[override]
         return iter(self._data["data"])
 
+    def __len__(self) -> int:
+        return len(self._data["data"])
+
 
 class Webhook(APIObject):
     """A webhook registration."""
 
     id: str
     url: str
-    events: List[str]
-    secret: Optional[str]
-    created_at: Optional[str]
+    events: list[str]
+    secret: str | None
+    is_active: bool
+    failure_count: int
+    created_at: str | None
 
 
 class WebhookList(APIObject):
     """List of webhooks."""
 
-    data: List[Webhook]
+    data: list[Webhook]
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def __init__(self, data: dict[str, Any] | None = None, **kwargs: Any) -> None:
         super().__init__(data, **kwargs)
         raw_items = self._data.get("data", [])
         self._data["data"] = [
@@ -292,7 +312,7 @@ class WebhookTestResponse(APIObject):
     """Response from testing a webhook."""
 
     success: bool
-    status_code: Optional[int]
+    status_code: int | None
 
 
 class Status(APIObject):
@@ -304,7 +324,7 @@ class Status(APIObject):
 class Feedback(APIObject):
     """Feedback submission response."""
 
-    id: Optional[str]
-    request_id: Optional[str]
-    rating: Optional[Any]
-    comment: Optional[str]
+    id: str | None
+    request_id: str | None
+    rating: Any | None
+    comment: str | None

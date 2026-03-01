@@ -10,17 +10,6 @@ import json
 from typing import Any, AsyncIterator, Dict, Iterator, Optional
 
 
-def _parse_sse_line(line: str) -> Optional[Dict[str, Any]]:
-    """Parse a single SSE line pair into an event dict.
-
-    Returns ``None`` if the line is a comment, keep-alive, or incomplete.
-    """
-    line = line.strip()
-    if not line or line.startswith(":"):
-        return None
-    return line  # type: ignore[return-value]
-
-
 def _parse_event_block(block: str) -> Optional[Dict[str, Any]]:
     """Parse a full SSE event block (separated by double newlines).
 

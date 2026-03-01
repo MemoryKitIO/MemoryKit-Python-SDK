@@ -227,6 +227,27 @@ class ChatMessageList(APIObject):
         return len(self._data["data"])
 
 
+class ChatHistory(APIObject):
+    """Chat history with metadata and full message list."""
+
+    id: str
+    title: str | None
+    messages: list[ChatMessage]
+
+    def __init__(self, data: dict[str, Any] | None = None, **kwargs: Any) -> None:
+        super().__init__(data, **kwargs)
+        raw_messages = self._data.get("messages", [])
+        self._data["messages"] = [
+            ChatMessage(item) if isinstance(item, dict) else item for item in raw_messages
+        ]
+
+    def __iter__(self) -> Iterator[ChatMessage]:  # type: ignore[override]
+        return iter(self._data["messages"])
+
+    def __len__(self) -> int:
+        return len(self._data["messages"])
+
+
 class ChatMessageResponse(APIObject):
     """Wrapper for chat message API response."""
 

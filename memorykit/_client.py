@@ -6,6 +6,7 @@ error parsing, and the snake_case <-> camelCase parameter conversion.
 
 from __future__ import annotations
 
+import asyncio
 import re
 import time
 import random
@@ -387,14 +388,12 @@ class AsyncHTTPClient:
             except httpx.TimeoutException as exc:
                 last_err = MKTimeoutError(f"Request timed out: {exc}")
                 if attempt < self._max_retries:
-                    import asyncio
                     await asyncio.sleep(_backoff_delay(attempt))
                     continue
                 raise last_err from exc
             except httpx.ConnectError as exc:
                 last_err = MKConnectionError(f"Connection failed: {exc}")
                 if attempt < self._max_retries:
-                    import asyncio
                     await asyncio.sleep(_backoff_delay(attempt))
                     continue
                 raise last_err from exc
@@ -421,7 +420,6 @@ class AsyncHTTPClient:
                         retry_after = float(ra_header)
                     except ValueError:
                         pass
-                import asyncio
                 await asyncio.sleep(_backoff_delay(attempt, retry_after))
                 continue
 

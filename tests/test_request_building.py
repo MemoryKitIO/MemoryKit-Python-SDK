@@ -106,19 +106,49 @@ class TestMemoriesRequestBuilding:
         mk.memories._client.request.return_value = {"results": [], "total_results": 0}
         mk.memories.search(
             query="search term",
+            precision="high",
             limit=20,
-            score_threshold=0.8,
             include_graph=True,
-            filters={"metadata": {"key": "val"}},
             user_id="u1",
+            type="article",
+            tags=["python", "sdk"],
+            created_after="2025-01-01T00:00:00Z",
+            created_before="2025-12-31T23:59:59Z",
         )
         args = mk.memories._client.request.call_args
-        body = args[1]["json"]
-        assert body["query"] == "search term"
-        assert body["limit"] == 20
-        assert body["score_threshold"] == 0.8
-        assert body["include_graph"] is True
-        assert body["user_id"] == "u1"
+        params = args[1]["params"]
+        assert params["query"] == "search term"
+        assert params["precision"] == "high"
+        assert params["limit"] == 20
+        assert params["include_graph"] is True
+        assert params["user_id"] == "u1"
+        assert params["type"] == "article"
+        assert params["tags"] == "python,sdk"
+        assert params["created_after"] == "2025-01-01T00:00:00Z"
+        assert params["created_before"] == "2025-12-31T23:59:59Z"
+
+    def test_search_handles_datetime_objects(self, mk):
+        from datetime import datetime, timezone
+
+        mk.memories._client.request.return_value = {"results": []}
+        dt_after = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        dt_before = datetime(2025, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+        mk.memories.search(
+            query="test",
+            created_after=dt_after,
+            created_before=dt_before,
+        )
+        args = mk.memories._client.request.call_args
+        params = args[1]["params"]
+        assert params["created_after"] == dt_after.isoformat()
+        assert params["created_before"] == dt_before.isoformat()
+
+    def test_search_tags_as_string(self, mk):
+        mk.memories._client.request.return_value = {"results": []}
+        mk.memories.search(query="test", tags="a,b,c")
+        args = mk.memories._client.request.call_args
+        params = args[1]["params"]
+        assert params["tags"] == "a,b,c"
 
     def test_batch_create_sends_items(self, mk):
         mk.memories._client.request.return_value = {"accepted": 2, "rejected": 0, "items": []}
@@ -350,11 +380,17 @@ class TestDualCaseParams:
         body = mk.memories._client.request.call_args[1]["json"]
         assert body["max_sources"] == 5
 
-    def test_memories_search_score_threshold_camel(self, mk):
+    def test_memories_search_user_id_camel(self, mk):
         mk.memories._client.request.return_value = {"results": []}
-        mk.memories.search(query="test", scoreThreshold=0.8)
-        body = mk.memories._client.request.call_args[1]["json"]
-        assert body["score_threshold"] == 0.8
+        mk.memories.search(query="test", userId="u1")
+        params = mk.memories._client.request.call_args[1]["params"]
+        assert params["user_id"] == "u1"
+
+    def test_memories_search_include_graph_camel(self, mk):
+        mk.memories._client.request.return_value = {"results": []}
+        mk.memories.search(query="test", includeGraph=True)
+        params = mk.memories._client.request.call_args[1]["params"]
+        assert params["include_graph"] is True
 
     def test_memories_query_include_graph_camel(self, mk):
         mk.memories._client.request.return_value = {"answer": "", "confidence": 0, "sources": []}

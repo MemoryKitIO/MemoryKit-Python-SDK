@@ -70,7 +70,7 @@ class TestMemoriesEndpoints:
         mk.memories._client.request.return_value = {"results": [], "totalResults": 0}
         mk.memories.search(query="test")
         args = mk.memories._client.request.call_args
-        assert args[0] == ("POST", "/memories/search")
+        assert args[0] == ("GET", "/memories/search")
 
     def test_query_path(self, mk):
         mk.memories._client.request.return_value = {"answer": "test", "confidence": 0.9, "sources": []}

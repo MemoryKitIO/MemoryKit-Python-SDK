@@ -43,13 +43,14 @@ _PARAM_MAP: Dict[str, str] = {
     "user_id": "userId",
     "max_sources": "maxSources",
     "include_graph": "includeGraph",
-    "score_threshold": "scoreThreshold",
     "response_format": "responseFormat",
     "memory_ids": "memoryIds",
     "request_id": "requestId",
     "has_more": "hasMore",
     "total_results": "totalResults",
     "status_code": "statusCode",
+    "created_after": "createdAfter",
+    "created_before": "createdBefore",
 }
 
 # Reverse map for converting API responses back to snake_case

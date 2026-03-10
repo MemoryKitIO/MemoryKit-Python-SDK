@@ -48,7 +48,7 @@ memorykit/
 | `GET /v1/memories/:id` | `mk.memories.get()` | `await mk.memories.get()` |
 | `PUT /v1/memories/:id` | `mk.memories.update()` | `await mk.memories.update()` |
 | `DELETE /v1/memories/:id` | `mk.memories.delete()` | `await mk.memories.delete()` |
-| `POST /v1/memories/search` | `mk.memories.search()` | `await mk.memories.search()` |
+| `GET /v1/memories/search` | `mk.memories.search()` | `await mk.memories.search()` |
 | `POST /v1/memories/query` | `mk.memories.query()` | `await mk.memories.query()` |
 | `POST /v1/memories/query/stream` | `mk.memories.stream()` | `async for event in mk.memories.stream()` |
 | `POST /v1/memories/upload` | `mk.memories.upload()` | `await mk.memories.upload()` |

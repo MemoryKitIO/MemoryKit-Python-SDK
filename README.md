@@ -29,10 +29,10 @@ memory = mk.memories.create(
 )
 print(memory.id, memory.status)
 
-# Query your knowledge base
-answer = mk.memories.query(query="Who created Python?", mode="auto")
-print(answer.answer)
-print(answer.confidence)
+# Search your knowledge base
+results = mk.memories.search(query="Who created Python?", limit=5)
+for result in results.results:
+    print(result.id, result.score)
 ```
 
 ## Async Support
@@ -43,7 +43,7 @@ from memorykit import AsyncMemoryKit
 mk = AsyncMemoryKit(api_key="ctx_...")
 
 memory = await mk.memories.create(content="...")
-answer = await mk.memories.query(query="...")
+results = await mk.memories.search(query="...")
 ```
 
 ## Configuration
@@ -151,111 +151,20 @@ memory = mk.memories.reprocess("mem_abc123")
 mk.memories.delete("mem_abc123")
 ```
 
-#### RAG Query
-
-```python
-answer = mk.memories.query(
-    query="What were the key decisions from Q4 planning?",
-    mode="auto",          # "auto", "retrieval", or "generation"
-    max_sources=5,
-    temperature=0.7,
-    userId="user_123",
-    filters={"tags": ["meetings"]},
-)
-print(answer.answer)
-print(answer.confidence)
-for source in answer.sources:
-    print(source.id, source.score)
-```
-
 #### Hybrid Search
 
 ```python
 results = mk.memories.search(
     query="Q4 planning decisions",
+    precision="high",
     limit=10,
-    score_threshold=0.5,
     include_graph=True,
-    filters={"tags": ["meetings"]},
-    userId="user_123",
+    tags=["meetings"],
+    user_id="user_123",
+    created_after="2025-01-01T00:00:00Z",
 )
 for result in results.results:
     print(result.id, result.score)
-```
-
-#### Streaming
-
-```python
-for event in mk.memories.stream(query="Summarize Q4 planning", mode="auto"):
-    if event["event"] == "text":
-        print(event["data"]["content"], end="", flush=True)
-    elif event["event"] == "sources":
-        print("\nSources:", event["data"])
-    elif event["event"] == "error":
-        print("\nError:", event["data"])
-print()
-```
-
-Async streaming:
-
-```python
-async for event in await mk.memories.stream(query="..."):
-    if event["event"] == "text":
-        print(event["data"]["content"], end="")
-```
-
-### Chats
-
-#### Create a chat
-
-```python
-chat = mk.chats.create(userId="user_123", title="Support Chat")
-print(chat.id)
-```
-
-#### List chats
-
-```python
-chats = mk.chats.list(userId="user_123", limit=10)
-for chat in chats:
-    print(chat.id, chat.title)
-```
-
-#### Send a message
-
-```python
-response = mk.chats.send_message(
-    "chat_abc123",
-    message="What do you know about our Q4 plans?",
-    mode="auto",
-    max_sources=5,
-)
-print(response.message.content)
-for source in response.message.sources or []:
-    print(source.id)
-```
-
-#### Stream a message
-
-```python
-for event in mk.chats.stream_message("chat_abc123", message="Tell me more"):
-    if event["event"] == "text":
-        print(event["data"]["content"], end="", flush=True)
-print()
-```
-
-#### Get chat history
-
-```python
-history = mk.chats.get_history("chat_abc123")
-for msg in history.messages:
-    print(f"{msg.role}: {msg.content}")
-```
-
-#### Delete a chat
-
-```python
-mk.chats.delete("chat_abc123")
 ```
 
 ### Users
@@ -376,8 +285,8 @@ The MemoryKit API uses camelCase parameters (`userId`, `maxSources`, `includeGra
 
 ```python
 # Both of these work identically:
-mk.memories.query(query="...", max_sources=5, user_id="user_123")
-mk.memories.query(query="...", maxSources=5, userId="user_123")
+mk.memories.search(query="...", user_id="user_123", include_graph=True)
+mk.memories.search(query="...", userId="user_123", includeGraph=True)
 ```
 
 ## Response Objects
@@ -385,11 +294,11 @@ mk.memories.query(query="...", maxSources=5, userId="user_123")
 All responses are typed objects with attribute access:
 
 ```python
-answer = mk.memories.query(query="...")
-print(answer.answer)       # attribute access
-print(answer.confidence)
-print(answer["answer"])    # dict-style access also works
-print(answer.to_dict())   # convert to plain dict
+results = mk.memories.search(query="...")
+print(results.results)     # attribute access
+print(results.total)
+print(results["results"])  # dict-style access also works
+print(results.to_dict())   # convert to plain dict
 ```
 
 ## Error Handling

@@ -41,17 +41,19 @@ from ._errors import (
 from ._types import (
     APIObject,
     BatchIngestResponse,
-    Chat,
-    ChatHistory,
-    ChatList,
-    ChatMessage,
-    ChatMessageResponse,
+    # V2: chat types disabled for initial launch
+    # Chat,
+    # ChatHistory,
+    # ChatList,
+    # ChatMessage,
+    # ChatMessageResponse,
     Event,
     EventList,
     Feedback,
     Memory,
     MemoryList,
-    QueryResponse,
+    # V2: query types disabled for initial launch
+    # QueryResponse,
     SearchResponse,
     Status,
     User,
@@ -59,7 +61,8 @@ from ._types import (
     WebhookList,
     WebhookTestResponse,
 )
-from .chats import AsyncChats, Chats
+# V2: chats resource disabled for initial launch
+# from .chats import AsyncChats, Chats
 from .feedback import AsyncFeedbackResource, FeedbackResource
 from .memories import AsyncMemories, Memories
 from .status import AsyncStatusResource, StatusResource
@@ -85,7 +88,8 @@ class MemoryKit:
     """
 
     memories: Memories
-    chats: Chats
+    # V2: chats resource disabled for initial launch
+    # chats: Chats
     users: Users
     webhooks: Webhooks
     status: StatusResource
@@ -106,7 +110,8 @@ class MemoryKit:
             max_retries=max_retries,
         )
         self.memories = Memories(self._client)
-        self.chats = Chats(self._client)
+        # V2: chats resource disabled for initial launch
+        # self.chats = Chats(self._client)
         self.users = Users(self._client)
         self.webhooks = Webhooks(self._client)
         self.status = StatusResource(self._client)
@@ -144,7 +149,8 @@ class AsyncMemoryKit:
     """
 
     memories: AsyncMemories
-    chats: AsyncChats
+    # V2: chats resource disabled for initial launch
+    # chats: AsyncChats
     users: AsyncUsers
     webhooks: AsyncWebhooks
     status: AsyncStatusResource
@@ -165,7 +171,8 @@ class AsyncMemoryKit:
             max_retries=max_retries,
         )
         self.memories = AsyncMemories(self._client)
-        self.chats = AsyncChats(self._client)
+        # V2: chats resource disabled for initial launch
+        # self.chats = AsyncChats(self._client)
         self.users = AsyncUsers(self._client)
         self.webhooks = AsyncWebhooks(self._client)
         self.status = AsyncStatusResource(self._client)
@@ -204,13 +211,14 @@ __all__ = [
     "Memory",
     "MemoryList",
     "BatchIngestResponse",
-    "QueryResponse",
+    # V2: query/chat types disabled for initial launch
+    # "QueryResponse",
     "SearchResponse",
-    "Chat",
-    "ChatList",
-    "ChatHistory",
-    "ChatMessage",
-    "ChatMessageResponse",
+    # "Chat",
+    # "ChatList",
+    # "ChatHistory",
+    # "ChatMessage",
+    # "ChatMessageResponse",
     "User",
     "Event",
     "EventList",

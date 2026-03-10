@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 from ._client import AsyncHTTPClient, SyncHTTPClient
@@ -10,7 +11,8 @@ from ._types import (
     BatchIngestResponse,
     Memory,
     MemoryList,
-    QueryResponse,
+    # V2: query endpoint disabled for initial launch
+    # QueryResponse,
     SearchResponse,
 )
 
@@ -237,148 +239,132 @@ class Memories:
         """
         self._client.request("DELETE", f"/memories/{memory_id}")
 
-    def query(
-        self,
-        query: str,
-        *,
-        max_sources: Optional[int] = None,
-        maxSources: Optional[int] = None,
-        temperature: Optional[float] = None,
-        mode: Optional[str] = None,
-        user_id: Optional[str] = None,
-        userId: Optional[str] = None,
-        instructions: Optional[str] = None,
-        response_format: Optional[str] = None,
-        responseFormat: Optional[str] = None,
-        include_graph: Optional[bool] = None,
-        includeGraph: Optional[bool] = None,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> QueryResponse:
-        """Perform a RAG query across memories.
-
-        Args:
-            query: The natural language query (required).
-            max_sources: Maximum number of source documents (default 10).
-            temperature: LLM temperature (default 0.7).
-            mode: Query mode — ``"fast"``, ``"balanced"``, or ``"precise"``.
-            user_id: Scope query to a specific user.
-            instructions: Additional instructions for the LLM.
-            response_format: Desired response format.
-            include_graph: Whether to include knowledge graph data.
-            filters: Filter object with keys like ``metadata``, ``tags``,
-                     ``memory_ids``, ``type``.
-
-        Returns:
-            A :class:`QueryResponse` with ``answer``, ``confidence``, ``sources``.
-        """
-        body: Dict[str, Any] = {
-            "query": query,
-            "max_sources": max_sources or maxSources,
-            "temperature": temperature,
-            "mode": mode,
-            "user_id": user_id or userId,
-            "instructions": instructions,
-            "response_format": response_format or responseFormat,
-            "include_graph": include_graph if include_graph is not None else includeGraph,
-            "filters": filters,
-        }
-        data = self._client.request("POST", "/memories/query", json=body)
-        return QueryResponse(data)
+    # V2: query endpoint disabled for initial launch
+    # def query(
+    #     self,
+    #     query: str,
+    #     *,
+    #     max_sources: Optional[int] = None,
+    #     maxSources: Optional[int] = None,
+    #     temperature: Optional[float] = None,
+    #     mode: Optional[str] = None,
+    #     user_id: Optional[str] = None,
+    #     userId: Optional[str] = None,
+    #     instructions: Optional[str] = None,
+    #     response_format: Optional[str] = None,
+    #     responseFormat: Optional[str] = None,
+    #     include_graph: Optional[bool] = None,
+    #     includeGraph: Optional[bool] = None,
+    #     filters: Optional[Dict[str, Any]] = None,
+    # ) -> QueryResponse:
+    #     body: Dict[str, Any] = {
+    #         "query": query,
+    #         "max_sources": max_sources or maxSources,
+    #         "temperature": temperature,
+    #         "mode": mode,
+    #         "user_id": user_id or userId,
+    #         "instructions": instructions,
+    #         "response_format": response_format or responseFormat,
+    #         "include_graph": include_graph if include_graph is not None else includeGraph,
+    #         "filters": filters,
+    #     }
+    #     data = self._client.request("POST", "/memories/query", json=body)
+    #     return QueryResponse(data)
 
     def search(
         self,
         query: str,
         *,
+        precision: Optional[str] = None,
         limit: Optional[int] = None,
-        score_threshold: Optional[float] = None,
-        scoreThreshold: Optional[float] = None,
-        include_graph: Optional[bool] = None,
-        includeGraph: Optional[bool] = None,
-        filters: Optional[Dict[str, Any]] = None,
         user_id: Optional[str] = None,
         userId: Optional[str] = None,
+        type: Optional[str] = None,
+        tags: Optional[Union[List[str], str]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        created_before: Optional[Union[str, datetime]] = None,
+        include_graph: Optional[bool] = None,
+        includeGraph: Optional[bool] = None,
     ) -> SearchResponse:
         """Perform a hybrid search across memories.
 
         Args:
             query: The search query (required).
-            limit: Maximum results (default 10).
-            score_threshold: Minimum relevance score (default 0.5).
+            precision: Result precision level — ``"low"``, ``"medium"``
+                (default), or ``"high"``.
+            limit: Maximum results, 1-100 (default 10).
+            user_id: Scope to a specific user (snake_case form).
+            userId: Scope to a specific user (camelCase form).
+            type: Filter by memory type.
+            tags: Filter by tags. Accepts a list of strings (joined with
+                comma) or a pre-joined comma-separated string.
+            created_after: Only return memories created after this timestamp.
+                Accepts an ISO 8601 string or a :class:`~datetime.datetime`
+                object (converted via ``.isoformat()``).
+            created_before: Only return memories created before this timestamp.
+                Same formats as *created_after*.
             include_graph: Include knowledge graph data.
-            filters: Filter object.
-            user_id: Scope to a specific user.
 
         Returns:
-            A :class:`SearchResponse` with ``results``, ``graph``, ``total_results``.
+            A :class:`SearchResponse` with ``results``, ``graph``,
+            ``total_results``.
         """
-        body: Dict[str, Any] = {
+        # Normalise tags to comma-separated string
+        if isinstance(tags, list):
+            tags = ",".join(tags)
+
+        # Normalise datetime objects to ISO 8601 strings
+        if isinstance(created_after, datetime):
+            created_after = created_after.isoformat()
+        if isinstance(created_before, datetime):
+            created_before = created_before.isoformat()
+
+        params: Dict[str, Any] = {
             "query": query,
+            "precision": precision,
             "limit": limit,
-            "score_threshold": score_threshold or scoreThreshold,
-            "include_graph": include_graph if include_graph is not None else includeGraph,
-            "filters": filters,
             "user_id": user_id or userId,
+            "type": type,
+            "tags": tags,
+            "created_after": created_after,
+            "created_before": created_before,
+            "include_graph": include_graph if include_graph is not None else includeGraph,
         }
-        data = self._client.request("POST", "/memories/search", json=body)
+        data = self._client.request("GET", "/memories/search", params=params)
         return SearchResponse(data)
 
-    def stream(
-        self,
-        query: str,
-        *,
-        max_sources: Optional[int] = None,
-        maxSources: Optional[int] = None,
-        temperature: Optional[float] = None,
-        mode: Optional[str] = None,
-        user_id: Optional[str] = None,
-        userId: Optional[str] = None,
-        instructions: Optional[str] = None,
-        response_format: Optional[str] = None,
-        responseFormat: Optional[str] = None,
-        include_graph: Optional[bool] = None,
-        includeGraph: Optional[bool] = None,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> SSEIterator:
-        """Stream a RAG query using Server-Sent Events.
-
-        Yields dicts with ``event`` (str) and ``data`` (parsed JSON or str) keys.
-        Event types include ``"text"``, ``"sources"``, ``"usage"``, ``"done"``,
-        and ``"error"``.
-
-        Args:
-            query: The natural language query (required).
-            max_sources: Maximum source documents.
-            temperature: LLM temperature.
-            mode: Query mode.
-            user_id: Scope to a specific user.
-            instructions: Additional LLM instructions.
-            response_format: Desired response format.
-            include_graph: Include knowledge graph data.
-            filters: Filter object.
-
-        Returns:
-            An :class:`SSEIterator` that yields event dicts.
-
-        Example::
-
-            for event in mk.memories.stream(query="..."):
-                if event["event"] == "text":
-                    print(event["data"]["content"], end="")
-        """
-        body: Dict[str, Any] = {
-            "query": query,
-            "max_sources": max_sources or maxSources,
-            "temperature": temperature,
-            "mode": mode,
-            "user_id": user_id or userId,
-            "instructions": instructions,
-            "response_format": response_format or responseFormat,
-            "include_graph": include_graph if include_graph is not None else includeGraph,
-            "filters": filters,
-        }
-        body["stream"] = True
-        response = self._client.request_stream("POST", "/memories/query", json=body)
-        return SSEIterator(response)
+    # V2: streaming disabled for initial launch
+    # def stream(
+    #     self,
+    #     query: str,
+    #     *,
+    #     max_sources: Optional[int] = None,
+    #     maxSources: Optional[int] = None,
+    #     temperature: Optional[float] = None,
+    #     mode: Optional[str] = None,
+    #     user_id: Optional[str] = None,
+    #     userId: Optional[str] = None,
+    #     instructions: Optional[str] = None,
+    #     response_format: Optional[str] = None,
+    #     responseFormat: Optional[str] = None,
+    #     include_graph: Optional[bool] = None,
+    #     includeGraph: Optional[bool] = None,
+    #     filters: Optional[Dict[str, Any]] = None,
+    # ) -> SSEIterator:
+    #     body: Dict[str, Any] = {
+    #         "query": query,
+    #         "max_sources": max_sources or maxSources,
+    #         "temperature": temperature,
+    #         "mode": mode,
+    #         "user_id": user_id or userId,
+    #         "instructions": instructions,
+    #         "response_format": response_format or responseFormat,
+    #         "include_graph": include_graph if include_graph is not None else includeGraph,
+    #         "filters": filters,
+    #     }
+    #     body["stream"] = True
+    #     response = self._client.request_stream("POST", "/memories/query", json=body)
+    #     return SSEIterator(response)
 
 
 # ---------------------------------------------------------------------------
@@ -530,92 +516,104 @@ class AsyncMemories:
         """Soft-delete a memory. See :meth:`Memories.delete`."""
         await self._client.request("DELETE", f"/memories/{memory_id}")
 
-    async def query(
-        self,
-        query: str,
-        *,
-        max_sources: Optional[int] = None,
-        maxSources: Optional[int] = None,
-        temperature: Optional[float] = None,
-        mode: Optional[str] = None,
-        user_id: Optional[str] = None,
-        userId: Optional[str] = None,
-        instructions: Optional[str] = None,
-        response_format: Optional[str] = None,
-        responseFormat: Optional[str] = None,
-        include_graph: Optional[bool] = None,
-        includeGraph: Optional[bool] = None,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> QueryResponse:
-        """RAG query. See :meth:`Memories.query`."""
-        body: Dict[str, Any] = {
-            "query": query,
-            "max_sources": max_sources or maxSources,
-            "temperature": temperature,
-            "mode": mode,
-            "user_id": user_id or userId,
-            "instructions": instructions,
-            "response_format": response_format or responseFormat,
-            "include_graph": include_graph if include_graph is not None else includeGraph,
-            "filters": filters,
-        }
-        data = await self._client.request("POST", "/memories/query", json=body)
-        return QueryResponse(data)
+    # V2: query endpoint disabled for initial launch
+    # async def query(
+    #     self,
+    #     query: str,
+    #     *,
+    #     max_sources: Optional[int] = None,
+    #     maxSources: Optional[int] = None,
+    #     temperature: Optional[float] = None,
+    #     mode: Optional[str] = None,
+    #     user_id: Optional[str] = None,
+    #     userId: Optional[str] = None,
+    #     instructions: Optional[str] = None,
+    #     response_format: Optional[str] = None,
+    #     responseFormat: Optional[str] = None,
+    #     include_graph: Optional[bool] = None,
+    #     includeGraph: Optional[bool] = None,
+    #     filters: Optional[Dict[str, Any]] = None,
+    # ) -> QueryResponse:
+    #     body: Dict[str, Any] = {
+    #         "query": query,
+    #         "max_sources": max_sources or maxSources,
+    #         "temperature": temperature,
+    #         "mode": mode,
+    #         "user_id": user_id or userId,
+    #         "instructions": instructions,
+    #         "response_format": response_format or responseFormat,
+    #         "include_graph": include_graph if include_graph is not None else includeGraph,
+    #         "filters": filters,
+    #     }
+    #     data = await self._client.request("POST", "/memories/query", json=body)
+    #     return QueryResponse(data)
 
     async def search(
         self,
         query: str,
         *,
+        precision: Optional[str] = None,
         limit: Optional[int] = None,
-        score_threshold: Optional[float] = None,
-        scoreThreshold: Optional[float] = None,
-        include_graph: Optional[bool] = None,
-        includeGraph: Optional[bool] = None,
-        filters: Optional[Dict[str, Any]] = None,
         user_id: Optional[str] = None,
         userId: Optional[str] = None,
+        type: Optional[str] = None,
+        tags: Optional[Union[List[str], str]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        created_before: Optional[Union[str, datetime]] = None,
+        include_graph: Optional[bool] = None,
+        includeGraph: Optional[bool] = None,
     ) -> SearchResponse:
-        """Hybrid search. See :meth:`Memories.search`."""
-        body: Dict[str, Any] = {
+        """Hybrid search. See :meth:`Memories.search` for details."""
+        if isinstance(tags, list):
+            tags = ",".join(tags)
+        if isinstance(created_after, datetime):
+            created_after = created_after.isoformat()
+        if isinstance(created_before, datetime):
+            created_before = created_before.isoformat()
+
+        params: Dict[str, Any] = {
             "query": query,
+            "precision": precision,
             "limit": limit,
-            "score_threshold": score_threshold or scoreThreshold,
-            "include_graph": include_graph if include_graph is not None else includeGraph,
-            "filters": filters,
             "user_id": user_id or userId,
+            "type": type,
+            "tags": tags,
+            "created_after": created_after,
+            "created_before": created_before,
+            "include_graph": include_graph if include_graph is not None else includeGraph,
         }
-        data = await self._client.request("POST", "/memories/search", json=body)
+        data = await self._client.request("GET", "/memories/search", params=params)
         return SearchResponse(data)
 
-    async def stream(
-        self,
-        query: str,
-        *,
-        max_sources: Optional[int] = None,
-        maxSources: Optional[int] = None,
-        temperature: Optional[float] = None,
-        mode: Optional[str] = None,
-        user_id: Optional[str] = None,
-        userId: Optional[str] = None,
-        instructions: Optional[str] = None,
-        response_format: Optional[str] = None,
-        responseFormat: Optional[str] = None,
-        include_graph: Optional[bool] = None,
-        includeGraph: Optional[bool] = None,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> AsyncSSEIterator:
-        """Stream a RAG query. See :meth:`Memories.stream`."""
-        body: Dict[str, Any] = {
-            "query": query,
-            "max_sources": max_sources or maxSources,
-            "temperature": temperature,
-            "mode": mode,
-            "user_id": user_id or userId,
-            "instructions": instructions,
-            "response_format": response_format or responseFormat,
-            "include_graph": include_graph if include_graph is not None else includeGraph,
-            "filters": filters,
-        }
-        body["stream"] = True
-        response = await self._client.request_stream("POST", "/memories/query", json=body)
-        return AsyncSSEIterator(response)
+    # V2: streaming disabled for initial launch
+    # async def stream(
+    #     self,
+    #     query: str,
+    #     *,
+    #     max_sources: Optional[int] = None,
+    #     maxSources: Optional[int] = None,
+    #     temperature: Optional[float] = None,
+    #     mode: Optional[str] = None,
+    #     user_id: Optional[str] = None,
+    #     userId: Optional[str] = None,
+    #     instructions: Optional[str] = None,
+    #     response_format: Optional[str] = None,
+    #     responseFormat: Optional[str] = None,
+    #     include_graph: Optional[bool] = None,
+    #     includeGraph: Optional[bool] = None,
+    #     filters: Optional[Dict[str, Any]] = None,
+    # ) -> AsyncSSEIterator:
+    #     body: Dict[str, Any] = {
+    #         "query": query,
+    #         "max_sources": max_sources or maxSources,
+    #         "temperature": temperature,
+    #         "mode": mode,
+    #         "user_id": user_id or userId,
+    #         "instructions": instructions,
+    #         "response_format": response_format or responseFormat,
+    #         "include_graph": include_graph if include_graph is not None else includeGraph,
+    #         "filters": filters,
+    #     }
+    #     body["stream"] = True
+    #     response = await self._client.request_stream("POST", "/memories/query", json=body)
+    #     return AsyncSSEIterator(response)

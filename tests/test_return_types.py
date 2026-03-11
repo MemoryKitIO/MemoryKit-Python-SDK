@@ -395,7 +395,7 @@ class TestMemoriesReturnTypes:
             "answer": "The answer is 42.",
             "confidence": 0.95,
             "sources": [{"content": "source1", "score": 0.9}],
-            "model": "gpt-4",
+            "model": "gpt-5-nano",
             "request_id": "req_123",
             "usage": {"total_time_ms": 500},
         }

@@ -89,7 +89,7 @@ The Python SDK `CLAUDE.md` maps `POST /v1/feedback` to `mk.feedback.submit()`, b
 | `model` | `SendMessageRequest.model` | `chats.stream_message()` | **MISSING** |
 
 **Severity**: Medium
-- `model` parameter: Users cannot select the LLM model (gpt-5-nano, gpt-5-mini, gpt-4o-mini, gpt-4o) through the SDK. The TS SDK exposes this via `QueryParams.model` and `SendMessageParams.model`.
+- `model` parameter: Users cannot select the LLM model (gpt-5-nano, gpt-5-mini, gpt-5-nano, gpt-5-nano) through the SDK. The TS SDK exposes this via `QueryParams.model` and `SendMessageParams.model`.
 - `history` parameter: Users cannot pass conversation history for multi-turn queries through the SDK. The TS SDK exposes this via `QueryParams.history`.
 - `score_threshold` on query: Backend accepts it on `/memories/query` but SDK only exposes it on `/memories/search`.
 

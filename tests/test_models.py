@@ -276,14 +276,14 @@ class TestQueryResponse:
             "answer": "The answer is 42.",
             "confidence": 0.95,
             "sources": [{"content": "src1", "score": 0.9}],
-            "model": "gpt-4",
+            "model": "gpt-5-nano",
             "request_id": "req_123",
             "usage": {"total_time_ms": 500},
         }
         resp = QueryResponse(data)
         assert resp.answer == "The answer is 42."
         assert resp.confidence == 0.95
-        assert resp.model == "gpt-4"
+        assert resp.model == "gpt-5-nano"
         assert resp.request_id == "req_123"
 
 
